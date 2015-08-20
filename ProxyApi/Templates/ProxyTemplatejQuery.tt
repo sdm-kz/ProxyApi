@@ -4,14 +4,14 @@
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
 
-(function (angular) {
-    'use strict';
-
-    angular.module('api-proxies', []);
-}(angular));
-
-(function(angular) {
+(function($) {
 	"use strict";
+
+	if (!$) {
+		throw "jQuery is required";
+	}
+
+	$.proxies = $.proxies || {};
 
 	function getQueryString(params, queryString) {
 		queryString = queryString || "";
@@ -41,54 +41,48 @@
 		return val;
 	}
 
+	function invoke(url, type, urlParams, body) {
+		url += getQueryString(urlParams);
+
+
+		var ajaxOptions = $.extend({}, this.defaultOptions, {
+			url: url,
+			type: type
+		});
+
+		if (body) {
+			ajaxOptions.data = body;
+		}
+
+		if (this.antiForgeryToken) {
+			var token = $.isFunction(this.antiForgeryToken) ? this.antiForgeryToken() : this.antiForgeryToken;
+			if (token) {
+				ajaxOptions.headers = ajaxOptions.headers || {};
+				ajaxOptions.headers["<#= ValidateHttpAntiForgeryTokenAttribute.RequestVerificationTokenHeader #>"] = token
+			}
+		}
+	
+		return $.ajax(ajaxOptions);
+	};
+
 	function defaultAntiForgeryTokenAccessor() {
 		return $("input[name=__RequestVerificationToken]").val();
 	};
 
-	angular
-        .module('api-proxies')
-		.factory('api', [ '$http', 
-            function($http) {
-
-					function invoke(url, type, urlParams, body) {
-						url += getQueryString(urlParams);
-
-						var request = angular.extend({}, this.defaultOptions, {
-							method: type,
-							url: url
-						});
-
-						if (body) {
-							request.data = body;
-						}
-
-						if (this.antiForgeryToken) {
-							var token = typeof this.antiForgeryToken === 'function' ? this.antiForgeryToken() : this.antiForgeryToken;
-							if (token) {
-								request.headers = request.headers || {};
-								request.headers["X-RequestVerificationToken"] = token
-							}
-						}
-
-						return $http(request);
-					};
-
-            var api = {};
-
 	/* Proxies */
 
 	<# foreach(var definition in this.Definitions) { #>
-	api.<#= definition.Name #> = {
+	$.proxies.<#= definition.Name #> = {
 		defaultOptions: {},
 		antiForgeryToken: defaultAntiForgeryTokenAccessor,
 <# foreach(var method in definition.ActionMethods) { #>
 
 <#
 	var allParameters = method.UrlParameters.AsEnumerable();
+	
 	if (method.BodyParameter != null) {
 		allParameters = allParameters.Concat(new [] { method.BodyParameter });
 	}
-
 	var parameterList = string.Join(",", allParameters.Where(m => m != null)
 							.OrderBy(m => m.Index)
 							.Select(m => m.Name)
@@ -97,7 +91,7 @@
 #>
 	<#= method.Name #>: function(<#=parameterList#>) {
 		return invoke.call(this, "<#= method.Url #>", "<#= method.Type.ToString().ToLower() #>", 
-			angular.extend({},
+			$.extend({},
 			<# if (method.UrlParameters.Any()) { #>
 				{
 				<# foreach (var parameter in method.UrlParameters) { #>
@@ -114,11 +108,6 @@
 		<# } #>
 	},
 <# } #>
-			};
-
+};
 	<# } #>
-        
-            return api;
-        }
-    ]);
-}(angular));
+}(jQuery));
