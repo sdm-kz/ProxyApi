@@ -57,7 +57,7 @@ namespace ProxyApi.Factories
 			var definition	= new ActionMethodDefinition();
 			definition.Name	= method.GetProxyName();
 			definition.Type = GetMethodType(method);
-			definition.Url	= GetUrl(controllerDefinition, GetExplicitActionName(method) ?? method.Name.ToLower());
+            definition.Url = GetUrl(controllerDefinition, GetExplicitActionName(method) ?? method.Name.FromLowerCase());
 
 			var index		= 0;
 			var parameters	= method.GetParameters();
@@ -111,7 +111,7 @@ namespace ProxyApi.Factories
 			if (acceptVerbsMvc != null && acceptVerbsMvc.Verbs.Any())
 				return acceptVerbsMvc.Verbs.Select(s => (HttpVerbs)Enum.Parse(typeof(HttpVerbs), s.ToString(), true)).First();
 
-			var name = method.Name.ToLower();
+            var name = method.Name.FromLowerCase();
 			if (name.StartsWith("get")) return HttpVerbs.Get;
 			if (name.StartsWith("post")) return HttpVerbs.Post;
 			if (name.StartsWith("delete")) return HttpVerbs.Delete;

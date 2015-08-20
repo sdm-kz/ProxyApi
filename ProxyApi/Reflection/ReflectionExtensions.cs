@@ -104,7 +104,7 @@ namespace ProxyApi.Reflection
 			if (nameAttribute != null)
 				return nameAttribute.Name;
 
-			return method.Name.ToLower();
+            return method.Name.FromLowerCase();
 		}
 
 		/// <summary>
@@ -120,7 +120,7 @@ namespace ProxyApi.Reflection
 			if (nameAttribute != null)
 				return nameAttribute.Name;
 
-			return type.Name.ToLower().Replace("controller", string.Empty);
+            return type.Name.Replace("Controller", string.Empty).FromLowerCase();
 		}
 	}
 }
