@@ -92,7 +92,7 @@ namespace ProxyApi.Reflection
 
 		private IEnumerable<MethodInfo> GetPotentialMethods(Type controllerType)
 		{
-			var methods = controllerType.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+			var methods = controllerType.GetMethods(BindingFlags.Public | BindingFlags.Instance)
 				.Where(m => IsIncluded(m, controllerType))
 				.GroupBy(m => m.GetProxyName());
 
